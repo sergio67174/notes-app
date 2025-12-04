@@ -51,3 +51,35 @@ export async function getActiveTasksByBoardId(boardId) {
   );
   return res.rows;
 }
+
+export async function findDoneColumnForBoard(boardId) {
+  const res = await query(
+    `
+    SELECT id, board_id, name, slug, position
+    FROM columns
+    WHERE board_id = $1
+      AND slug = 'DONE'
+    LIMIT 1
+    `,
+    [boardId]
+  );
+  return res.rows[0] || null;
+}
+
+// 👉 NEW: soft-delete tasks in DONE column
+export async function softDeleteDoneTasksForBoard(boardId, doneColumnId) {
+  const res = await query(
+    `
+    UPDATE tasks
+    SET is_deleted = true,
+        deleted_at = NOW()
+    WHERE board_id = $1
+      AND column_id = $2
+      AND is_deleted = false
+    RETURNING id
+    `,
+    [boardId, doneColumnId]
+  );
+
+  return res.rowCount; // number of tasks soft-deleted
+}

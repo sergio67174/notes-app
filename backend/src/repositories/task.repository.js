@@ -46,3 +46,36 @@ export async function createTask({ boardId, columnId, title, description, positi
   );
   return res.rows[0];
 }
+
+export async function findTaskByIdForUser({ taskId, userId }) {
+  const res = await query(
+    `
+    SELECT t.*
+    FROM tasks t
+    JOIN boards b ON t.board_id = b.id
+    WHERE t.id = $1
+      AND b.owner_id = $2
+      AND t.is_deleted = false
+    `,
+    [taskId, userId]
+  );
+  return res.rows[0] || null;
+}
+
+// 👉 NEW: Update column + position
+export async function moveTaskToColumn({ taskId, targetColumnId, newPosition }) {
+  const res = await query(
+    `
+    UPDATE tasks
+    SET column_id = $1,
+        position = $2
+    WHERE id = $3
+    RETURNING id, board_id, column_id, title, description,
+              position, is_deleted, deleted_at,
+              created_at, updated_at
+    `,
+    [targetColumnId, newPosition, taskId]
+  );
+
+  return res.rows[0] || null;
+}

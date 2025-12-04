@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMyBoardController } from "../controllers/board.controller.js";
+import { getMyBoardController, removeDoneTasksController  } from "../controllers/board.controller.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 export const boardRouter = Router();
@@ -8,3 +8,4 @@ export const boardRouter = Router();
 boardRouter.use(authMiddleware);
 
 boardRouter.get("/board", getMyBoardController);
+boardRouter.post("/board/remove-done-tasks", removeDoneTasksController);

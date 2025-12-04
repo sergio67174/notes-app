@@ -17,3 +17,15 @@ export async function createDefaultColumnsForBoard(boardId) {
     );
   }
 }
+
+export async function findColumnById(columnId) {
+  const res = await query(
+    `
+    SELECT id, board_id, name, slug, position, created_at, updated_at
+    FROM columns
+    WHERE id = $1
+    `,
+    [columnId]
+  );
+  return res.rows[0] || null;
+}
