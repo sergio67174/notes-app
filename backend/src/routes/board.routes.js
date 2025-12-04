@@ -1,7 +1,10 @@
 import { Router } from "express";
+import { getMyBoardController } from "../controllers/board.controller.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 export const boardRouter = Router();
 
-boardRouter.get("/board", (req, res) => {
-  res.status(501).json({ message: "Not implemented yet" });
-});
+// everything under /me must be authenticated
+boardRouter.use(authMiddleware);
+
+boardRouter.get("/board", getMyBoardController);

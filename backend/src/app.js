@@ -13,6 +13,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/me", boardRouter);
 
 app.use(errorHandler);
 
