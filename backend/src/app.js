@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { authRouter } from "./routes/auth.routes.js";
+import { boardRouter } from "./routes/board.routes.js";
+import { taskRouter } from "./routes/task.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -14,6 +16,7 @@ app.get("/health", (req, res) => {
 
 app.use("/auth", authRouter);
 app.use("/me", boardRouter);
+app.use("/tasks", taskRouter);
 
 app.use(errorHandler);
 
