@@ -4,9 +4,28 @@ import {
   createTask,
   findTaskByIdForUser,
   moveTaskToColumn,
+  updateTask,
 } from "../repositories/task.repository.js";
 import { findColumnById } from "../repositories/column.repository.js";
 
+const PASTEL_COLORS = ["pastel-yellow", "pastel-pink", "pastel-green", "pastel-blue"];
+
+/**
+ * Get a random pastel color for a new task
+ * @returns {string} Random pastel color name
+ */
+function getRandomPastelColor() {
+  return PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)];
+}
+
+/**
+ * Create a new task for a user in their TODO column
+ * @param {Object} params
+ * @param {number} params.userId - User ID
+ * @param {string} params.title - Task title
+ * @param {string} [params.description] - Task description
+ * @returns {Promise<Object>} Created task
+ */
 export async function createTaskForUser({ userId, title, description }) {
   const result = await findTodoColumnForUser(userId);
 
@@ -18,6 +37,7 @@ export async function createTaskForUser({ userId, title, description }) {
 
   const { board, column } = result;
   const position = await getNextPositionForColumn(column.id);
+  const color = getRandomPastelColor();
 
   const task = await createTask({
     boardId: board.id,
@@ -25,12 +45,21 @@ export async function createTaskForUser({ userId, title, description }) {
     title,
     description,
     position,
+    color,
   });
 
   return task;
 }
 
-// 👉 NEW: move task between columns
+/**
+ * Move a task to a different column
+ * @param {Object} params
+ * @param {number} params.userId - User ID
+ * @param {number} params.taskId - Task ID
+ * @param {number} params.targetColumnId - Target column ID
+ * @param {number} [params.newPosition] - New position in column
+ * @returns {Promise<Object>} Updated task
+ */
 export async function moveTaskForUser({ userId, taskId, targetColumnId, newPosition }) {
   const task = await findTaskByIdForUser({ taskId, userId });
   if (!task) {
@@ -63,6 +92,32 @@ export async function moveTaskForUser({ userId, taskId, targetColumnId, newPosit
     taskId,
     targetColumnId: column.id,
     newPosition: positionToUse,
+  });
+
+  return updated;
+}
+
+/**
+ * Update task title and/or description
+ * @param {Object} params
+ * @param {number} params.userId - User ID
+ * @param {number} params.taskId - Task ID
+ * @param {string} [params.title] - New title
+ * @param {string} [params.description] - New description
+ * @returns {Promise<Object>} Updated task
+ */
+export async function updateTaskForUser({ userId, taskId, title, description }) {
+  const task = await findTaskByIdForUser({ taskId, userId });
+  if (!task) {
+    const err = new Error("Task not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const updated = await updateTask({
+    taskId,
+    title,
+    description,
   });
 
   return updated;

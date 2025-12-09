@@ -41,7 +41,7 @@ export async function getActiveTasksByBoardId(boardId) {
   const res = await query(
     `
     SELECT id, board_id, column_id, title, description, position,
-           is_deleted, deleted_at, created_at, updated_at
+           color, is_deleted, deleted_at, created_at, updated_at
     FROM tasks
     WHERE board_id = $1
       AND is_deleted = false

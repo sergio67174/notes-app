@@ -2,6 +2,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import RegisterPage from "../RegisterPage";
 
 /**
@@ -15,13 +16,24 @@ function typeIntoInputByTestId(testId, value) {
   fireEvent.change(input, { target: { value } });
 }
 
+/**
+ * Renders RegisterPage wrapped in MemoryRouter for testing
+ */
+function renderRegisterPage() {
+  return render(
+    <MemoryRouter>
+      <RegisterPage />
+    </MemoryRouter>
+  );
+}
+
 describe("RegisterPage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
   it("renders the register form with fields and button", () => {
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     expect(screen.getByTestId("register-container")).toBeInTheDocument();
     expect(screen.getByTestId("register-title")).toBeInTheDocument();
@@ -32,14 +44,14 @@ describe("RegisterPage", () => {
   });
 
   it("disables the register button when form is invalid", () => {
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     const button = screen.getByTestId("register-button");
     expect(button).toBeDisabled();
   });
 
   it("enables the register button when all fields are valid", () => {
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     typeIntoInputByTestId("register-input-name", "Regina");
     typeIntoInputByTestId("register-input-email", "regina@example.com");
@@ -50,7 +62,7 @@ describe("RegisterPage", () => {
   });
 
   it("shows validation messages when fields are invalid after blur", () => {
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     // Name: blur without typing
     const nameInput = screen.getByTestId("register-input-name");
@@ -78,7 +90,7 @@ describe("RegisterPage", () => {
     });
     global.fetch = mockFetch;
 
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     typeIntoInputByTestId("register-input-name", "Regina");
     typeIntoInputByTestId("register-input-email", "regina@example.com");
@@ -105,7 +117,7 @@ describe("RegisterPage", () => {
     });
     global.fetch = mockFetch;
 
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     typeIntoInputByTestId("register-input-name", "Regina");
     typeIntoInputByTestId("register-input-email", "regina@example.com");
@@ -131,7 +143,7 @@ describe("RegisterPage", () => {
     });
     global.fetch = mockFetch;
 
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     typeIntoInputByTestId("register-input-name", "Regina");
     typeIntoInputByTestId("register-input-email", "regina@example.com");
@@ -153,7 +165,7 @@ describe("RegisterPage", () => {
     const mockFetch = vi.fn().mockRejectedValue(new Error("network down"));
     global.fetch = mockFetch;
 
-    render(<RegisterPage />);
+    renderRegisterPage();
 
     typeIntoInputByTestId("register-input-name", "Regina");
     typeIntoInputByTestId("register-input-email", "regina@example.com");
@@ -169,8 +181,8 @@ describe("RegisterPage", () => {
     });
   });
 
-  it("has a link to login with the correct href", () => {
-    render(<RegisterPage />);
+  it("has a link to login with the correct href attribute", () => {
+    renderRegisterPage();
 
     const link = screen.getByTestId("login-link");
     expect(link).toBeInTheDocument();

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const REGISTER_ENDPOINT = "/auth/register";
@@ -187,9 +188,9 @@ export default function RegisterPage() {
 
         <p className="auth-switch">
           Already have an account?{" "}
-          <a href="/login" data-testid="login-link">
+          <Link to="/login" data-testid="login-link">
             Log in
-          </a>
+          </Link>
         </p>
       </form>
     </div>

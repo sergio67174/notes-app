@@ -32,6 +32,7 @@ import { getMyBoard } from "../../src/services/board.service.js";
 import {
   createTaskForUser,
   moveTaskForUser,
+  updateTaskForUser,
 } from "../../src/services/task.service.js";
 import { pool } from "../../src/config/db.js";
 
@@ -400,5 +401,223 @@ test("moveTaskForUser throws 404 when target column does not exist", async () =>
   ).rejects.toMatchObject({
     status: 404,
   });
+});
+
+// -------------------------------------------------------------------------
+//  Update Task Tests / R-009, R-010
+// -------------------------------------------------------------------------
+
+/**
+ * @test
+ * @requirement R-009
+ * @requirement R-010
+ *
+ * @description
+ * Validates that updateTaskForUser can update both title and description:
+ *  - Task title can be updated.
+ *  - Task description can be updated.
+ *  - updated_at is automatically updated (R-010).
+ */
+test("updateTaskForUser updates title and description", async () => {
+  const user = await registerUser({
+    email: "update1@example.com",
+    password: "Password123!",
+    name: "Update User 1",
+  });
+
+  const created = await createTaskForUser({
+    userId: user.id,
+    title: "Original Title",
+    description: "Original Description",
+  });
+
+  const updated = await updateTaskForUser({
+    userId: user.id,
+    taskId: created.id,
+    title: "Updated Title",
+    description: "Updated Description",
+  });
+
+  expect(updated).toBeDefined();
+  expect(updated.title).toBe("Updated Title");
+  expect(updated.description).toBe("Updated Description");
+  expect(updated.id).toBe(created.id);
+  expect(new Date(updated.updated_at).getTime()).toBeGreaterThan(
+    new Date(created.updated_at).getTime()
+  );
+});
+
+/**
+ * @test
+ * @requirement R-009
+ *
+ * @description
+ * Validates that updateTaskForUser can update only the title:
+ *  - Only title is updated.
+ *  - Description remains unchanged.
+ */
+test("updateTaskForUser updates only title when description is not provided", async () => {
+  const user = await registerUser({
+    email: "update2@example.com",
+    password: "Password123!",
+    name: "Update User 2",
+  });
+
+  const created = await createTaskForUser({
+    userId: user.id,
+    title: "Original Title",
+    description: "Original Description",
+  });
+
+  const updated = await updateTaskForUser({
+    userId: user.id,
+    taskId: created.id,
+    title: "New Title",
+  });
+
+  expect(updated).toBeDefined();
+  expect(updated.title).toBe("New Title");
+  expect(updated.description).toBe("Original Description");
+});
+
+/**
+ * @test
+ * @requirement R-009
+ *
+ * @description
+ * Validates that updateTaskForUser can update only the description:
+ *  - Only description is updated.
+ *  - Title remains unchanged.
+ */
+test("updateTaskForUser updates only description when title is not provided", async () => {
+  const user = await registerUser({
+    email: "update3@example.com",
+    password: "Password123!",
+    name: "Update User 3",
+  });
+
+  const created = await createTaskForUser({
+    userId: user.id,
+    title: "Original Title",
+    description: "Original Description",
+  });
+
+  const updated = await updateTaskForUser({
+    userId: user.id,
+    taskId: created.id,
+    description: "New Description",
+  });
+
+  expect(updated).toBeDefined();
+  expect(updated.title).toBe("Original Title");
+  expect(updated.description).toBe("New Description");
+});
+
+/**
+ * @test
+ * @requirement R-009
+ * @requirement R-021
+ *
+ * @description
+ * Validates that updateTaskForUser throws 404 when task does not exist:
+ *  - Attempting to update a non-existing task fails.
+ *  - Validates authorization check (user must own the task).
+ */
+test("updateTaskForUser throws 404 when task does not exist", async () => {
+  const user = await registerUser({
+    email: "update4@example.com",
+    password: "Password123!",
+    name: "Update User 4",
+  });
+
+  const fakeTaskId = "00000000-0000-0000-0000-000000000000";
+
+  await expect(
+    updateTaskForUser({
+      userId: user.id,
+      taskId: fakeTaskId,
+      title: "New Title",
+    })
+  ).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+/**
+ * @test
+ * @requirement R-009
+ * @requirement R-021
+ *
+ * @description
+ * Validates cross-user isolation for task updates:
+ *  - User A creates a task.
+ *  - User B tries to update User A's task.
+ *  - Operation fails with 404 (task not found for User B).
+ */
+test("updateTaskForUser prevents cross-user updates", async () => {
+  const userA = await registerUser({
+    email: "updateA@example.com",
+    password: "Password123!",
+    name: "Update User A",
+  });
+
+  const userB = await registerUser({
+    email: "updateB@example.com",
+    password: "Password123!",
+    name: "Update User B",
+  });
+
+  const taskForA = await createTaskForUser({
+    userId: userA.id,
+    title: "Task A",
+    description: "Belongs to A",
+  });
+
+  await expect(
+    updateTaskForUser({
+      userId: userB.id,
+      taskId: taskForA.id,
+      title: "Hacked Title",
+    })
+  ).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+/**
+ * @test
+ * @requirement R-008
+ *
+ * @description
+ * Validates that newly created tasks have a random pastel color assigned:
+ *  - Color field is populated.
+ *  - Color is one of the expected pastel colors.
+ */
+test("createTaskForUser assigns random pastel color", async () => {
+  const user = await registerUser({
+    email: "color1@example.com",
+    password: "Password123!",
+    name: "Color User 1",
+  });
+
+  const task1 = await createTaskForUser({
+    userId: user.id,
+    title: "Task 1",
+    description: "Test color",
+  });
+
+  const task2 = await createTaskForUser({
+    userId: user.id,
+    title: "Task 2",
+    description: "Test color",
+  });
+
+  const validColors = ["pastel-yellow", "pastel-pink", "pastel-green", "pastel-blue"];
+
+  expect(task1.color).toBeDefined();
+  expect(validColors).toContain(task1.color);
+
+  expect(task2.color).toBeDefined();
+  expect(validColors).toContain(task2.color);
 });
 });

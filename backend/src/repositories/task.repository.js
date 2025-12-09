@@ -33,16 +33,16 @@ export async function getNextPositionForColumn(columnId) {
   return res.rows[0].next_position;
 }
 
-export async function createTask({ boardId, columnId, title, description, position }) {
+export async function createTask({ boardId, columnId, title, description, position, color }) {
   const res = await query(
     `
-    INSERT INTO tasks (board_id, column_id, title, description, position)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO tasks (board_id, column_id, title, description, position, color)
+    VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING id, board_id, column_id, title, description,
-              position, is_deleted, deleted_at,
+              position, color, is_deleted, deleted_at,
               created_at, updated_at
     `,
-    [boardId, columnId, title, description ?? null, position]
+    [boardId, columnId, title, description ?? null, position, color]
   );
   return res.rows[0];
 }
@@ -50,7 +50,9 @@ export async function createTask({ boardId, columnId, title, description, positi
 export async function findTaskByIdForUser({ taskId, userId }) {
   const res = await query(
     `
-    SELECT t.*
+    SELECT t.id, t.board_id, t.column_id, t.title, t.description,
+           t.position, t.color, t.is_deleted, t.deleted_at,
+           t.created_at, t.updated_at
     FROM tasks t
     JOIN boards b ON t.board_id = b.id
     WHERE t.id = $1
@@ -71,10 +73,37 @@ export async function moveTaskToColumn({ taskId, targetColumnId, newPosition }) 
         position = $2
     WHERE id = $3
     RETURNING id, board_id, column_id, title, description,
-              position, is_deleted, deleted_at,
+              position, color, is_deleted, deleted_at,
               created_at, updated_at
     `,
     [targetColumnId, newPosition, taskId]
+  );
+
+  return res.rows[0] || null;
+}
+
+/**
+ * Update task title and/or description
+ * @param {Object} params
+ * @param {number} params.taskId - Task ID
+ * @param {string} [params.title] - New title
+ * @param {string} [params.description] - New description
+ * @returns {Promise<Object|null>} Updated task or null
+ */
+export async function updateTask({ taskId, title, description }) {
+  const res = await query(
+    `
+    UPDATE tasks
+    SET title = COALESCE($1, title),
+        description = COALESCE($2, description),
+        updated_at = NOW()
+    WHERE id = $3
+      AND is_deleted = false
+    RETURNING id, board_id, column_id, title, description,
+              position, color, is_deleted, deleted_at,
+              created_at, updated_at
+    `,
+    [title, description, taskId]
   );
 
   return res.rows[0] || null;
