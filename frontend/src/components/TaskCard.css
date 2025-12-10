@@ -1,0 +1,167 @@
+.task-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.task-card-dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+/* Pastel color variants */
+.task-card-pastel-yellow {
+  background: #fef9c3;
+  border-color: #fde047;
+}
+
+.task-card-pastel-pink {
+  background: #fce7f3;
+  border-color: #f9a8d4;
+}
+
+.task-card-pastel-green {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.task-card-pastel-blue {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* DONE column transparency */
+.task-card-done {
+  opacity: 0.5;
+}
+
+.task-card-done:hover {
+  opacity: 0.7;
+}
+
+.task-actions {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.task-edit-btn,
+.task-delete-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 6px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.6);
+  transition: all 0.15s ease;
+}
+
+.task-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.task-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.task-title {
+  margin: 0 5rem 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.9);
+  line-height: 1.4;
+}
+
+.task-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Edit form */
+.task-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.task-edit-form input,
+.task-edit-form textarea {
+  padding: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.task-edit-form input:focus,
+.task-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.task-edit-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.task-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.task-edit-actions button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.task-edit-actions button:first-child {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.task-edit-actions button:first-child:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.task-edit-actions button:last-child {
+  background: var(--color-primary);
+  color: white;
+}
+
+.task-edit-actions button:last-child:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.task-edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

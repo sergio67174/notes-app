@@ -1,0 +1,19 @@
+.board-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  padding: 1.5rem;
+}
+
+.board-loading,
+.board-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  font-size: 1.2rem;
+}
+
+.board-error {
+  color: var(--color-error);
+}

@@ -21,6 +21,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { AuthProvider } from "../context/AuthContext";
 import AuthPage from "../AuthPage";
 
 /**
@@ -35,12 +36,14 @@ function typeIntoInputByTestId(testId, value) {
 }
 
 /**
- * Renders AuthPage wrapped in MemoryRouter for testing
+ * Renders AuthPage wrapped in MemoryRouter and AuthProvider for testing
  */
 function renderAuthPage() {
   return render(
     <MemoryRouter>
-      <AuthPage />
+      <AuthProvider>
+        <AuthPage />
+      </AuthProvider>
     </MemoryRouter>
   );
 }
@@ -212,7 +215,7 @@ describe("AuthPage", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:3000/auth/login",
+        "http://localhost:4000/auth/login",
         expect.objectContaining({
           method: "POST",
           headers: { "Content-Type": "application/json" },

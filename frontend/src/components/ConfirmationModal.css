@@ -1,0 +1,9 @@
+/* Reuse modal base styles from CreateTaskModal.css */
+@import './CreateTaskModal.css';
+
+/* Additional confirmation-specific styles */
+.modal-content p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}

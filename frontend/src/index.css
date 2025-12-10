@@ -17,6 +17,12 @@
   --color-text-muted: #9ca3af;
   --color-error: #f97373;
   --color-success: #22c55e;
+
+  /* Pastel colors for task cards */
+  --pastel-yellow: #fef9c3;
+  --pastel-pink: #fce7f3;
+  --pastel-green: #d1fae5;
+  --pastel-blue: #dbeafe;
 }
 
 html,
@@ -33,6 +39,10 @@ body {
 /* Make Vite root stretch full height */
 #root {
   min-height: 100vh;
+}
+
+/* Center auth pages only */
+#root:has(.auth-container) {
   display: flex;
   align-items: center;
   justify-content: center;

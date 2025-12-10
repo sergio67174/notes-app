@@ -16,11 +16,13 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const LOGIN_ENDPOINT = "/auth/login";
 
 export default function AuthPage() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,8 +67,8 @@ export default function AuthPage() {
       }
 
       const data = await res.json();
-      // TODO: Store token and redirect to dashboard
-      console.log("Login successful:", data);
+      // Store token and redirect to board
+      login(data);
 
     } catch {
       setError("Network error, please try again.");

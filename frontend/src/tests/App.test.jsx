@@ -2,13 +2,16 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { AuthProvider } from "../context/AuthContext";
 import App from "../App";
 
 describe("App", () => {
   it("renders the AuthPage (login) at /login route", () => {
     render(
       <MemoryRouter initialEntries={["/login"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -18,7 +21,9 @@ describe("App", () => {
   it("renders the RegisterPage at /register route", () => {
     render(
       <MemoryRouter initialEntries={["/register"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
@@ -28,7 +33,9 @@ describe("App", () => {
   it("redirects from / to /login", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MemoryRouter>
     );
 
