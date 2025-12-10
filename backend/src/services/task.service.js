@@ -5,6 +5,7 @@ import {
   findTaskByIdForUser,
   moveTaskToColumn,
   updateTask,
+  softDeleteTask,
 } from "../repositories/task.repository.js";
 import { findColumnById } from "../repositories/column.repository.js";
 
@@ -121,4 +122,23 @@ export async function updateTaskForUser({ userId, taskId, title, description }) 
   });
 
   return updated;
+}
+
+/**
+ * Soft-delete a specific task (mark as deleted, regardless of column)
+ * @param {Object} params
+ * @param {number} params.userId - User ID
+ * @param {number} params.taskId - Task ID to delete
+ * @returns {Promise<Object>} Deleted task
+ */
+export async function deleteTaskForUser({ userId, taskId }) {
+  const task = await findTaskByIdForUser({ taskId, userId });
+  if (!task) {
+    const err = new Error("Task not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const deleted = await softDeleteTask(taskId);
+  return deleted;
 }

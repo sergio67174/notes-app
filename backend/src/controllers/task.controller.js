@@ -1,4 +1,4 @@
-import { createTaskForUser, moveTaskForUser, updateTaskForUser } from "../services/task.service.js";
+import { createTaskForUser, moveTaskForUser, updateTaskForUser, deleteTaskForUser } from "../services/task.service.js";
 
 /**
  * Create a new task
@@ -75,6 +75,25 @@ export async function updateTaskController(req, res, next) {
     });
 
     return res.status(200).json(updated);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Delete a specific task (soft delete)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+export async function deleteTaskController(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const taskId = req.params.id;
+
+    const deleted = await deleteTaskForUser({ userId, taskId });
+
+    return res.status(200).json({ message: "Task deleted successfully", task: deleted });
   } catch (err) {
     next(err);
   }

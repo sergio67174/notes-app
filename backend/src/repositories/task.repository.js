@@ -108,3 +108,26 @@ export async function updateTask({ taskId, title, description }) {
 
   return res.rows[0] || null;
 }
+
+/**
+ * Soft-delete a specific task (mark as deleted)
+ * @param {string} taskId - Task ID to soft-delete
+ * @returns {Promise<Object|null>} Updated task or null
+ */
+export async function softDeleteTask(taskId) {
+  const res = await query(
+    `
+    UPDATE tasks
+    SET is_deleted = true,
+        deleted_at = NOW()
+    WHERE id = $1
+      AND is_deleted = false
+    RETURNING id, board_id, column_id, title, description,
+              position, color, is_deleted, deleted_at,
+              created_at, updated_at
+    `,
+    [taskId]
+  );
+
+  return res.rows[0] || null;
+}

@@ -33,6 +33,7 @@ import {
   createTaskForUser,
   moveTaskForUser,
   updateTaskForUser,
+  deleteTaskForUser,
 } from "../../src/services/task.service.js";
 import { pool } from "../../src/config/db.js";
 
@@ -87,9 +88,9 @@ describe("Task Service", () => {
    */
   test("createTaskForUser creates tasks in TODO with increasing position", async () => {
     const user = await registerUser({
-      email: "tasks1@example.com",
+      email: "tasks1_position@example.com",
       password: "Password123!",
-      name: "Task User 1",
+      name: "Task User Position",
     });
 
     // First task
@@ -99,12 +100,18 @@ describe("Task Service", () => {
       description: "First task",
     });
 
+    expect(t1).toBeDefined();
+    expect(t1.position).toBe(1);
+
     // Second task
     const t2 = await createTaskForUser({
       userId: user.id,
       title: "Task 2",
       description: "Second task",
     });
+
+    expect(t2).toBeDefined();
+    expect(t2.position).toBe(2);
 
     // Load board to inspect columns & tasks
     const boardData = await getMyBoard(user.id);
@@ -115,17 +122,11 @@ describe("Task Service", () => {
     expect(todoColumn).toBeDefined();
 
     // Both tasks should be in TODO
-    const task1 = tasks.find((t) => t.id === t1.id);
-    const task2 = tasks.find((t) => t.id === t2.id);
-
-    expect(task1).toBeDefined();
-    expect(task2).toBeDefined();
-    expect(task1.column_id).toBe(todoColumn.id);
-    expect(task2.column_id).toBe(todoColumn.id);
-
-    // Positions should increase
-    expect(task1.position).toBe(1);
-    expect(task2.position).toBe(2);
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].column_id).toBe(todoColumn.id);
+    expect(tasks[1].column_id).toBe(todoColumn.id);
+    expect(tasks[0].position).toBe(1);
+    expect(tasks[1].position).toBe(2);
   });
 
   // -------------------------------------------------------------------------
@@ -249,17 +250,23 @@ describe("Task Service", () => {
   test("moveTaskForUser throws 403 when moving to column of another user's board", async () => {
     // User A
     const userA = await registerUser({
-      email: "userA@example.com",
+      email: "crossmove_userA@example.com",
       password: "Password123!",
-      name: "User A",
+      name: "Cross Move User A",
     });
 
     // User B
     const userB = await registerUser({
-      email: "userB@example.com",
+      email: "crossmove_userB@example.com",
       password: "Password123!",
-      name: "User B",
+      name: "Cross Move User B",
     });
+
+    // Verify boards were created
+    const boardDataA = await getMyBoard(userA.id);
+    const boardDataB = await getMyBoard(userB.id);
+    expect(boardDataA.board).toBeDefined();
+    expect(boardDataB.board).toBeDefined();
 
     // Task for user A
     const taskForA = await createTaskForUser({
@@ -269,7 +276,6 @@ describe("Task Service", () => {
     });
 
     // Get a column from user B's board
-    const boardDataB = await getMyBoard(userB.id);
     const someColumnOfB = boardDataB.board.columns[0];
 
     // Try moving A's task into B's column
@@ -556,16 +562,20 @@ test("updateTaskForUser throws 404 when task does not exist", async () => {
  */
 test("updateTaskForUser prevents cross-user updates", async () => {
   const userA = await registerUser({
-    email: "updateA@example.com",
+    email: "crossupdate_userA@example.com",
     password: "Password123!",
-    name: "Update User A",
+    name: "Cross Update User A",
   });
 
   const userB = await registerUser({
-    email: "updateB@example.com",
+    email: "crossupdate_userB@example.com",
     password: "Password123!",
-    name: "Update User B",
+    name: "Cross Update User B",
   });
+
+  // Verify boards were created
+  await getMyBoard(userA.id);
+  await getMyBoard(userB.id);
 
   const taskForA = await createTaskForUser({
     userId: userA.id,
@@ -619,5 +629,200 @@ test("createTaskForUser assigns random pastel color", async () => {
 
   expect(task2.color).toBeDefined();
   expect(validColors).toContain(task2.color);
+});
+
+// -------------------------------------------------------------------------
+//  Delete Task Tests / Soft Delete Individual Task
+// -------------------------------------------------------------------------
+
+/**
+ * @test
+ * @requirement R-013
+ * @requirement R-017
+ *
+ * @description
+ * Validates that deleteTaskForUser soft-deletes a task:
+ *  - Task is marked as deleted (is_deleted = true).
+ *  - deleted_at timestamp is set.
+ *  - Soft-deleted tasks do not appear in board queries.
+ */
+test("deleteTaskForUser soft-deletes a task successfully", async () => {
+  const user = await registerUser({
+    email: "delete1@example.com",
+    password: "Password123!",
+    name: "Delete User 1",
+  });
+
+  const created = await createTaskForUser({
+    userId: user.id,
+    title: "Task to Delete",
+    description: "This will be soft-deleted",
+  });
+
+  // Delete the task
+  const deleted = await deleteTaskForUser({
+    userId: user.id,
+    taskId: created.id,
+  });
+
+  expect(deleted).toBeDefined();
+  expect(deleted.id).toBe(created.id);
+  expect(deleted.is_deleted).toBe(true);
+  expect(deleted.deleted_at).toBeDefined();
+  expect(deleted.deleted_at).not.toBeNull();
+
+  // Verify task no longer appears in board
+  const boardData = await getMyBoard(user.id);
+  const taskInBoard = boardData.board.tasks.find((t) => t.id === created.id);
+  expect(taskInBoard).toBeUndefined();
+});
+
+/**
+ * @test
+ * @requirement R-017
+ *
+ * @description
+ * Validates that deleteTaskForUser can soft-delete tasks from any column:
+ *  - Task in TODO column can be deleted.
+ *  - Task in IN_PROGRESS column can be deleted.
+ *  - Task in DONE column can be deleted.
+ */
+test("deleteTaskForUser can delete tasks from any column", async () => {
+  const user = await registerUser({
+    email: "delete2@example.com",
+    password: "Password123!",
+    name: "Delete User 2",
+  });
+
+  const boardData = await getMyBoard(user.id);
+  const columns = boardData.board.columns;
+  const todoColumn = columns.find((c) => c.slug === "TODO");
+  const inProgressColumn = columns.find((c) => c.slug === "IN_PROGRESS");
+  const doneColumn = columns.find((c) => c.slug === "DONE");
+
+  // Create task in TODO
+  const taskTodo = await createTaskForUser({
+    userId: user.id,
+    title: "Task in TODO",
+    description: "Will be deleted from TODO",
+  });
+
+  // Create and move task to IN_PROGRESS
+  const taskInProgress = await createTaskForUser({
+    userId: user.id,
+    title: "Task in IN_PROGRESS",
+    description: "Will be deleted from IN_PROGRESS",
+  });
+  await moveTaskForUser({
+    userId: user.id,
+    taskId: taskInProgress.id,
+    targetColumnId: inProgressColumn.id,
+    newPosition: 1,
+  });
+
+  // Create and move task to DONE
+  const taskDone = await createTaskForUser({
+    userId: user.id,
+    title: "Task in DONE",
+    description: "Will be deleted from DONE",
+  });
+  await moveTaskForUser({
+    userId: user.id,
+    taskId: taskDone.id,
+    targetColumnId: doneColumn.id,
+    newPosition: 1,
+  });
+
+  // Delete all three tasks
+  const deletedTodo = await deleteTaskForUser({
+    userId: user.id,
+    taskId: taskTodo.id,
+  });
+  const deletedInProgress = await deleteTaskForUser({
+    userId: user.id,
+    taskId: taskInProgress.id,
+  });
+  const deletedDone = await deleteTaskForUser({
+    userId: user.id,
+    taskId: taskDone.id,
+  });
+
+  expect(deletedTodo.is_deleted).toBe(true);
+  expect(deletedInProgress.is_deleted).toBe(true);
+  expect(deletedDone.is_deleted).toBe(true);
+
+  // Verify none appear in board
+  const updatedBoardData = await getMyBoard(user.id);
+  expect(updatedBoardData.board.tasks).toHaveLength(0);
+});
+
+/**
+ * @test
+ * @requirement R-021
+ *
+ * @description
+ * Validates that deleteTaskForUser throws 404 when task does not exist:
+ *  - Attempting to delete a non-existing task fails.
+ */
+test("deleteTaskForUser throws 404 when task does not exist", async () => {
+  const user = await registerUser({
+    email: "delete3@example.com",
+    password: "Password123!",
+    name: "Delete User 3",
+  });
+
+  const fakeTaskId = "00000000-0000-0000-0000-000000000000";
+
+  await expect(
+    deleteTaskForUser({
+      userId: user.id,
+      taskId: fakeTaskId,
+    })
+  ).rejects.toMatchObject({
+    status: 404,
+  });
+});
+
+/**
+ * @test
+ * @requirement R-021
+ *
+ * @description
+ * Validates cross-user isolation for task deletion:
+ *  - User A creates a task.
+ *  - User B tries to delete User A's task.
+ *  - Operation fails with 404 (task not found for User B).
+ */
+test("deleteTaskForUser prevents cross-user deletion", async () => {
+  const userA = await registerUser({
+    email: "crossdelete_userA@example.com",
+    password: "Password123!",
+    name: "Cross Delete User A",
+  });
+
+  const userB = await registerUser({
+    email: "crossdelete_userB@example.com",
+    password: "Password123!",
+    name: "Cross Delete User B",
+  });
+
+  // Verify boards were created
+  await getMyBoard(userA.id);
+  await getMyBoard(userB.id);
+
+  const taskForA = await createTaskForUser({
+    userId: userA.id,
+    title: "Task A",
+    description: "Belongs to A",
+  });
+
+  await expect(
+    deleteTaskForUser({
+      userId: userB.id,
+      taskId: taskForA.id,
+    })
+  ).rejects.toMatchObject({
+    status: 404,
+  });
 });
 });
