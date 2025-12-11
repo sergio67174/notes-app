@@ -373,7 +373,6 @@ jobs:
     name: Performance Tests (k6)
     runs-on: ubuntu-latest
     needs: [test-api-postman]
-    if: github.event_name == 'pull_request'
 
     services:
       postgres:
