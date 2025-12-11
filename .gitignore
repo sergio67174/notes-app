@@ -8,6 +8,7 @@ playwright-report
 
 # CI/CD artifacts
 k6-results.json
+k6-smoke-results.json
 postman-results.json
 *.log
 

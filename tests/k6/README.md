@@ -15,13 +15,20 @@ choco install k6
 
 ## Test Types
 
-### 1. Load Test (`load-test.js`)
+### 1. Smoke Test (`smoke-test.js`) ⚡ CI/CD OPTIMIZED
+- **Purpose**: Fast validation for CI/CD pipeline
+- **Duration**: 2 minutes
+- **Virtual Users**: Ramps from 0 → 5 → 10 → 0
+- **When to run**: Every CI/CD run, every PR, quick sanity checks
+- **Note**: This is a lightweight test for fast feedback. Run full load test before releases.
+
+### 2. Load Test (`load-test.js`)
 - **Purpose**: Test system performance under expected normal and peak load
 - **Duration**: 10 minutes
 - **Virtual Users**: Ramps from 0 → 50 → 100 → 50 → 0
 - **When to run**: Before releases, weekly
 
-### 2. Stress Test (`stress-test.js`)
+### 3. Stress Test (`stress-test.js`)
 - **Purpose**: Find system breaking point
 - **Duration**: 15 minutes
 - **Virtual Users**: Ramps from 0 → 200 → 300 → 0
@@ -45,17 +52,29 @@ choco install k6
 # Navigate to k6 directory
 cd tests/k6
 
-# Run individual test
+# Run smoke test (fast - 2 minutes, for CI/CD)
+k6 run scripts/smoke-test.js
+
+# Run full load test (10 minutes, for weekly/release testing)
 k6 run scripts/load-test.js
+
+# Run stress test (15 minutes, find breaking points)
+k6 run scripts/stress-test.js
+
+# Run spike test (5 minutes, test sudden traffic)
+k6 run scripts/spike-test.js
+
+# Run soak test (1+ hours, test stability)
+k6 run scripts/soak-test.js
 
 # Run with custom VUs and duration
 k6 run --vus 100 --duration 5m scripts/load-test.js
 
 # Run with environment variables
-k6 run -e API_URL=http://localhost:4000 scripts/load-test.js
+k6 run -e API_URL=http://localhost:4000 scripts/smoke-test.js
 
 # Run and save results to JSON
-k6 run --out json=reports/load-test-results.json scripts/load-test.js
+k6 run --out json=reports/smoke-test-results.json scripts/smoke-test.js
 
 # Run and send results to k6 Cloud (optional)
 k6 cloud scripts/load-test.js
@@ -154,22 +173,32 @@ Test results are saved to `tests/k6/reports/` directory:
 ## CI/CD Integration
 
 ```yaml
-# Example GitHub Actions
-- name: Run k6 Load Test
+# Example GitHub Actions - Use smoke test for fast validation
+- name: Run k6 Smoke Test (CI/CD)
+  run: |
+    k6 run tests/k6/scripts/smoke-test.js
+    # ~2 minutes, fast feedback
+
+# For weekly scheduled runs - Use full load test
+- name: Run k6 Load Test (Weekly)
   run: |
     k6 run tests/k6/scripts/load-test.js
-
-# Only proceed if performance thresholds pass
+    # ~10 minutes, thorough testing
 ```
 
 ## Best Practices
 
-1. **Run tests against staging environment** - Not production
-2. **Start small** - Begin with 10-20 VUs, gradually increase
-3. **Monitor server metrics** - CPU, memory, disk I/O during tests
-4. **Test realistic scenarios** - Mimic actual user behavior
-5. **Regular testing** - Weekly load tests, monthly stress tests
-6. **Track performance over time** - Compare results across releases
+1. **Use appropriate test for context**:
+   - CI/CD: smoke-test.js (~2 min)
+   - Before releases: load-test.js (10 min)
+   - Major releases: stress-test.js (15 min) + spike-test.js (5 min)
+   - Monthly: soak-test.js (1+ hour)
+2. **Run tests against staging environment** - Not production
+3. **Start small** - Begin with 10-20 VUs, gradually increase
+4. **Monitor server metrics** - CPU, memory, disk I/O during tests
+5. **Test realistic scenarios** - Mimic actual user behavior
+6. **Regular testing** - Weekly load tests, monthly stress tests
+7. **Track performance over time** - Compare results across releases
 
 ## Resources
 

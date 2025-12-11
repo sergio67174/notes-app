@@ -438,20 +438,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install k6
 
-      - name: Run k6 load test
+      - name: Run k6 smoke test (fast CI/CD validation)
         env:
           API_URL: http://localhost:4000
         run: |
-          k6 run tests/k6/scripts/load-test.js \
-            --out json=k6-results.json \
+          k6 run tests/k6/scripts/smoke-test.js \
+            --out json=k6-smoke-results.json \
             || echo "Performance tests failed but not blocking"
 
-      - name: Upload k6 results
+      - name: Upload k6 smoke test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: k6-results
-          path: k6-results.json
+          name: k6-smoke-results
+          path: k6-smoke-results.json
           retention-days: 30
 
       - name: Stop backend server
