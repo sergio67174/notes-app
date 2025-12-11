@@ -80,7 +80,9 @@ export default function RegisterPage() {
         try {
           const data = await res.json();
           if (data?.message) message = data.message;
-        } catch {}
+        } catch {
+          // Ignore JSON parse errors
+        }
 
         if (res.status === 409 || message.toLowerCase().includes("email")) {
           setApiError("This email is already registered.");

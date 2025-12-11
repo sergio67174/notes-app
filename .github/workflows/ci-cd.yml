@@ -105,17 +105,6 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Run database migrations
-        working-directory: backend
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: notes_db_test
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-        run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
-
       - name: Run Jest tests
         working-directory: backend
         env:
@@ -200,11 +189,6 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
-
-      - name: Run database migrations
-        working-directory: backend
-        run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
 
       - name: Start backend server
         working-directory: backend
@@ -303,11 +287,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
-
-      - name: Run database migrations
-        working-directory: backend
-        run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
 
       - name: Start backend server
         working-directory: backend
@@ -412,11 +391,6 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
-
-      - name: Run database migrations
-        working-directory: backend
-        run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
 
       - name: Start backend server
         working-directory: backend
