@@ -1,6 +1,6 @@
 // tests/playwright/api/only-one-board.spec.js
 import { test, expect } from '@playwright/test';
-import { registerUser, loginAndGetToken, authHeaders, safeJson } from './api-helpers.js';
+import { registerUser, loginAndGetToken, authHeaders, safeJson } from '../api-helpers.js';
 
 const BOARD_BASE = '/me/board';
 

@@ -105,8 +105,8 @@ export default function TaskCard({
       style={style}
       className={`task-card ${colorClass} ${doneClass} ${draggingClass}`}
       data-testid={`task-card-${task.id}`}
-      {...attributes}
-      {...listeners}
+      {...(!isEditing ? attributes : {})}
+      {...(!isEditing ? listeners : {})}
     >
       {!isEditing ? (
         <>

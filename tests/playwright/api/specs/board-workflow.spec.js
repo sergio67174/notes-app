@@ -1,6 +1,6 @@
 // tests/playwright/api/board-workflow.spec.js
 import { test, expect } from '@playwright/test';
-import { registerUser, loginAndGetToken, authHeaders, safeJson } from './api-helpers.js';
+import { registerUser, loginAndGetToken, authHeaders, safeJson } from '../api-helpers.js';
 
 // Base route for board operations: {{base_url}}/me/board
 const BOARD_BASE = '/me/board';
