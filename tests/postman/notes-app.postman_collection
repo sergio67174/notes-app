@@ -1,0 +1,1515 @@
+{
+	"info": {
+		"_postman_id": "b7fb4cf4-4b8e-4cc3-ac2e-b9dbb36a6f71",
+		"name": "Notes App",
+		"description": "API tests for the Notes/Kanban project: auth, board, tasks.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14866964"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has status: ok\", function () {\r",
+									"  const json = pm.response.json();\r",
+									"  pm.expect(json).to.have.property(\"status\", \"ok\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Response contains user object with id\", function () {\r",
+									"    pm.expect(json).to.have.property(\"user\");\r",
+									"    pm.expect(json.user).to.have.property(\"id\");\r",
+									"    pm.expect(json.user).to.have.property(\"email\");\r",
+									"    pm.expect(json.user).to.have.property(\"name\");\r",
+									"});\r",
+									"\r",
+									"// Optional: store the user id if you want it later\r",
+									"pm.environment.set(\"user_id\", json.user.id);\r",
+									"\r",
+									"// Optional: if register ever returns a token, save it as `token`\r",
+									"if (json.token || json.accessToken) {\r",
+									"    pm.environment.set(\"token\", json.token || json.accessToken);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// -------------------------------------------------------\r",
+									"// 1. RESET user-related variables before generating a new user\r",
+									"// -------------------------------------------------------\r",
+									"pm.environment.unset(\"email\");\r",
+									"pm.environment.unset(\"name\");\r",
+									"pm.environment.unset(\"password\");\r",
+									"\r",
+									"// -------------------------------------------------------\r",
+									"// 2. Generate new unique user ONLY for this request\r",
+									"// -------------------------------------------------------\r",
+									"if (!pm.environment.get(\"email\")) {\r",
+									"\r",
+									"    const suffix = Date.now().toString();\r",
+									"\r",
+									"    function randomFirstName() {\r",
+									"        const names = [\r",
+									"            \"Alice\", \"Bob\", \"Charlie\", \"Diana\", \"Eddy\", \"Fiona\", \"Grace\",\r",
+									"            \"Henry\", \"Isla\", \"Jack\", \"Kelly\", \"Leo\", \"Mia\", \"Noah\",\r",
+									"            \"Olivia\", \"Paul\", \"Quinn\", \"Rosa\", \"Sara\", \"Toby\", \"Uma\",\r",
+									"            \"Vera\", \"Will\", \"Xavi\", \"Yara\", \"Zane\"\r",
+									"        ];\r",
+									"        return names[Math.floor(Math.random() * names.length)];\r",
+									"    }\r",
+									"\r",
+									"    function randomLastName() {\r",
+									"        const surnames = [\r",
+									"            \"Smith\", \"Johnson\", \"Cordero\", \"Lopez\", \"Martinez\",\r",
+									"            \"Williams\", \"Brown\", \"Davis\", \"Miller\", \"Garcia\",\r",
+									"            \"Pérez\", \"Gonzalez\", \"Sanchez\", \"Torres\", \"Rivera\"\r",
+									"        ];\r",
+									"        return surnames[Math.floor(Math.random() * surnames.length)];\r",
+									"    }\r",
+									"\r",
+									"    const fullName = `${randomFirstName()} ${randomLastName()}`;\r",
+									"\r",
+									"    pm.environment.set(\"name\", fullName);\r",
+									"    pm.environment.set(\"email\", `test_user_${suffix}@example.com`);\r",
+									"    pm.environment.set(\"password\", \"Password123!\");\r",
+									"}\r",
+									"\r",
+									"// Debug (optional)\r",
+									"console.log(\"Generated test user:\", {\r",
+									"    email: pm.environment.get(\"email\"),\r",
+									"    name: pm.environment.get(\"name\"),\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\",\r\n  \"name\": \"{{name}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register User - Missing Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 for missing fields\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"const body = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Error message is exactly correct\", function () {\r",
+									"    pm.expect(body.message).to.eql(\"email, password and name are required\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"name\": \"{{name}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register User-Duplicate Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 409 for duplicate registration\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 409]);\r",
+									"});\r",
+									"\r",
+									"let body;\r",
+									"try {\r",
+									"    body = pm.response.json();\r",
+									"} catch (e) {\r",
+									"    body = {};\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Error message indicates duplicate email\", function () {\r",
+									"    const msg = (body.message || body.error || \"\").toLowerCase();\r",
+									"    pm.expect(msg).to.include(\"email already registered\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\",\r\n  \"name\": \"{{name}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Response contains token\", function () {\r",
+									"    pm.expect(json.token || json.accessToken, \"token/accessToken must exist\").to.exist;\r",
+									"});\r",
+									"\r",
+									"// Save token for future authorized requests\r",
+									"pm.environment.set(\"token\", json.token || json.accessToken);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"packages": {},
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"{{password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User -Unknown Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400, 401, or 404 for unknown email\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401, 404]);\r",
+									"});\r",
+									"\r",
+									"let body;\r",
+									"try {\r",
+									"    body = pm.response.json();\r",
+									"} catch (e) {\r",
+									"    body = {};\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Error message indicates user not found or invalid credentials\", function () {\r",
+									"    const msg = (body.message || body.error || \"\").toLowerCase();\r",
+									"    pm.expect(msg).to.include(\"invalid credentials\")\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"unknown_{{email}}\",\r\n  \"password\": \"{{password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User-Wrong Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 401 for wrong password\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 401]);\r",
+									"});\r",
+									"\r",
+									"let body;\r",
+									"try {\r",
+									"    body = pm.response.json();\r",
+									"} catch (e) {\r",
+									"    body = {};\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Error message indicates invalid credentials\", function () {\r",
+									"    const msg = (body.message || body.error || \"\").toLowerCase();\r",
+									"    pm.expect(msg).to.include(\"invalid credentials\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\",\r\n  \"password\": \"WrongPassword123!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User-MIssing Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 for missing password\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"const body = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Error message indicates fields required\", function () {\r",
+									"    pm.expect(body.message).to.eql(\"email and password are required\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{email}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "StartFragment\n\n# **Auth Module – Requirements and Test Cases**\n\nThis folder contains all API tests related to user authentication.\n\n---\n\n## ✔ **Endpoints Covered**\n\n- **POST /auth/register**\n    \n- **POST /auth/login**\n    \n\n---\n\n## ✔ **Backend Contract (Expected Behavior)**\n\n---\n\n### **1\\. POST /auth/register**\n\n#### **201 Created**\n\nReturned when valid `email`, `password`, and `name` are provided.  \n  \nA board and default columns are automatically created for the new user.\n\nExample response:\n\n```\n{\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"test@example.com\",\n    \"name\": \"Test User\"\n  }\n}\n\n ```\n\n---\n\n#### **400 Bad Request**\n\nReturned when any required field (`email`, `password`, `name`) is missing or empty.\n\nExample response:\n\n```\n{ \"message\": \"email, password and name are required\" }\n\n ```\n\n---\n\n#### **409 Conflict**\n\nReturned when the email is already registered.\n\nExample response:\n\n```\n{ \"message\": \"Email already registered\" }\n\n ```\n\n---\n\n### **2\\. POST /auth/login**\n\n#### **200 OK**\n\nReturned when `email` and `password` are valid.\n\nExample response:\n\n```\n{\n  \"token\": \"jwt-token-value\",\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"test@example.com\",\n    \"name\": \"Test User\"\n  }\n}\n\n ```\n\n---\n\n#### **400 Bad Request**\n\nReturned when required fields (`email` or `password`) are missing  \n  \n(if validation is implemented at controller level).\n\nExample:\n\n```\n{ \"message\": \"email and password are required\" }\n\n ```\n\n---\n\n#### **401 Unauthorized**\n\nReturned when credentials are invalid (unknown email or wrong password).\n\nExample:\n\n```\n{ \"message\": \"Invalid credentials\" }\n\n ```\n\n---\n\n## ✔ **Requirements Covered (REQ-AUTH)**\n\n**REQ-AUTH-001:** User can register with valid data.  \n**REQ-AUTH-002:** Backend rejects registration with missing required fields.  \n**REQ-AUTH-003:** Backend rejects duplicate email registration.  \n**REQ-AUTH-004:** User can login with valid credentials and receive JWT.  \n**REQ-AUTH-005:** Backend rejects login with wrong password.  \n**REQ-AUTH-006:** Backend rejects login with unknown email.  \n**REQ-AUTH-007:** Backend rejects login with missing login fields.  \n**REQ-AUTH-008:** Backend error responses must contain a `\"message\"` field.\n\n---\n\n## ✔ **Test Cases in This Folder (TC-AUTH)**\n\n### **Registration**\n\n**TC-AUTH-001 – Register User (Valid)** → expect **201** + user object.  \n**TC-AUTH-003 – Register User (Duplicate Email)** → expect **409** + `\"Email already registered\"`.  \n**TC-AUTH-004 – Register User (Missing Fields)** → expect **400** + `\"email, password and name are required\"`.\n\n---\n\n### **Login**\n\n**TC-AUTH-005 – Login User (Valid)** → expect **200** + token + user.  \n**TC-AUTH-006 – Login User (Wrong Password)** → expect **401** + `\"Invalid credentials\"`.  \n**TC-AUTH-007 – Login User (Unknown Email)** → expect **401** + `\"Invalid credentials\"`.  \n**TC-AUTH-008 – Login User (Missing Fields)** → expect **400** or **401**, depending on backend validation.\n\n---\n\n## ✔ **Environment Variables Used**\n\n- `{{email}}` – Set dynamically in Pre-request Script (random per run).\n    \n- `{{password}}` – Set dynamically (default: `Password123!`).\n    \n- `{{name}}` – Randomly generated name.\n    \n- `{{token}}` – Set on successful login.\n    \n\nThese variables allow Auth workflows and subsequent Board/Task requests to reuse the same authenticated user.\n\nEndFragment  \n  \n\n---",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Board",
+			"item": [
+				{
+					"name": "Get My Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Try to be flexible with response shape:\r",
+									"// - { id, columns }\r",
+									"// - or { board: { ... } }\r",
+									"// - or { data: { ... } }\r",
+									"const raw = pm.response.json();\r",
+									"const board = raw.board || raw.data || raw;\r",
+									"\r",
+									"// Basic board-level checks\r",
+									"pm.test(\"Board has basic properties\", function () {\r",
+									"    pm.expect(board).to.have.property(\"id\");\r",
+									"    pm.expect(board).to.have.property(\"columns\");\r",
+									"    pm.expect(board.columns).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"// Column-level checks (defensive)\r",
+									"pm.test(\"Columns have consistent structure\", function () {\r",
+									"    board.columns.forEach(col => {\r",
+									"        pm.expect(col).to.have.property(\"id\");\r",
+									"        pm.expect(col).to.have.property(\"name\");\r",
+									"\r",
+									"        // Only validate tasks if present\r",
+									"        if (Object.prototype.hasOwnProperty.call(col, \"tasks\")) {\r",
+									"            pm.expect(col.tasks).to.be.an(\"array\");\r",
+									"        }\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"// ----------------------\r",
+									"// NEW: Extract default columns and save IDs\r",
+									"// ----------------------\r",
+									"const columns = board.columns;\r",
+									"\r",
+									"// Find columns by slug\r",
+									"const todo = columns.find(c => c.slug === \"TODO\");\r",
+									"const inProgress = columns.find(c => c.slug === \"IN_PROGRESS\");\r",
+									"const done = columns.find(c => c.slug === \"DONE\");\r",
+									"\r",
+									"// Validate presence of default columns\r",
+									"pm.test(\"Default columns exist: TODO, IN_PROGRESS, DONE\", function () {\r",
+									"    pm.expect(todo).to.exist;\r",
+									"    pm.expect(inProgress).to.exist;\r",
+									"    pm.expect(done).to.exist;\r",
+									"});\r",
+									"\r",
+									"// Save environment variables\r",
+									"pm.environment.set(\"todo_column_id\", todo.id);\r",
+									"pm.environment.set(\"in_progress_column_id\", inProgress.id);\r",
+									"pm.environment.set(\"done_column_id\", done.id);\r",
+									"\r",
+									"// Optional: save board_id as well\r",
+									"pm.environment.set(\"board_id\", board.id);\r",
+									"\r",
+									"// Log values for debugging\r",
+									"console.log(\"Board ID:\", board.id);\r",
+									"console.log(\"TODO Column ID:\", todo.id);\r",
+									"console.log(\"IN_PROGRESS Column ID:\", inProgress.id);\r",
+									"console.log(\"DONE Column ID:\", done.id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/me/board",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me",
+								"board"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Board - No Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request without token is rejected\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);\r",
+									"});\r",
+									"\r",
+									"let body;\r",
+									"try {\r",
+									"    body = pm.response.json();\r",
+									"} catch (e) {\r",
+									"    body = {};\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Error message indicates missing or invalid auth\", function () {\r",
+									"    const msg = (body.message || body.error || \"\").toLowerCase();\r",
+									"    pm.expect(msg).to.include(\"missing or invalid authorization header\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/me/board",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me",
+								"board"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "StartFragment\n\n# **Board Module – Requirements and Test Cases**\n\nThis folder contains all API tests related to retrieving the authenticated user's board.\n\n---\n\n## ✔ **Endpoints Covered**\n\n- **GET /me/board**\n    \n\n---\n\n## ✔ **Backend Contract (Expected Behavior)**\n\n### **1\\. GET /me/board**\n\n**200 OK**\n\nReturned when a valid JWT token is provided.\n\nThe user’s board (automatically created during registration) is returned.\n\nExample structure:\n\n``` json\n{\n  \"id\": 1,\n  \"title\": \"My Board\",\n  \"columns\": [\n    {\n      \"id\": 10,\n      \"name\": \"TODO\",\n      \"tasks\": []\n    },\n    {\n      \"id\": 11,\n      \"name\": \"DOING\",\n      \"tasks\": []\n    },\n    {\n      \"id\": 12,\n      \"name\": \"DONE\",\n      \"tasks\": []\n    }\n  ]\n}\n\n ```\n\n**401 Unauthorized**\n\nReturned when:\n\n- Token is missing\n    \n- Token is invalid\n    \n- Authorization header is not provided\n    \n\nExample:\n\n```\n{ \"message\": \"Unauthorized\" }\n\n ```\n\n---\n\n## ✔ **Requirements Covered (REQ-BOARD)**\n\n**REQ-BOARD-001:** A new board must be automatically created for the user during registration.  \n**REQ-BOARD-002:** Authenticated users must be able to retrieve their board via `GET /me/board`.  \n**REQ-BOARD-003:** The board response must include:\n\n- `id`\n    \n- `columns` (array)\n    \n- each column must include `id`, `name`, and a `tasks` array.  \n    **REQ-BOARD-004:** Unauthorized requests must return `401` when token is missing or invalid.\n    \n\n---\n\n## ✔ **Test Cases in This Folder (TC-BOARD)**\n\n### Board Retrieval\n\n**TC-BOARD-001 – Get My Board (Valid Token)** → expect **200** + board object with columns.  \n**TC-BOARD-002 – Get My Board (Unauthorized)** → expect **401** when token is missing or invalid.  \n**TC-BOARD-003 – Board Exists After Registration** → workflow test: register → login → get board.\n\n---\n\n## ✔ **Environment Variables Used**\n\n- `{{token}}` – Set during successful login in Auth folder.\n    \n- `{{base_url}}` – Optional if configured at collection level.\n    \n\nThese variables allow chaining from Auth → Board tests and support end-to-end authenticated workflows.\n\nEndFragment"
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "Create Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"201 Created\", () => {\r",
+									"  pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"task_id\", json.id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"My first task\",\r\n  \"description\": \"Created from Postman\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Missing Fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Returns 400 for missing fields\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Error message included\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.expect(json).to.have.property(\"message\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"description\": \"Created from Postman\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const updated = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Task id remains the same\", function () {\r",
+									"  const originalId = pm.environment.get(\"task_id\");\r",
+									"  pm.expect(originalId, \"taskId is not set — run Create Task first\").to.exist;\r",
+									"  pm.expect(updated.id).to.eql(originalId);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Title and description are updated\", function () {\r",
+									"  pm.expect(updated.title).to.eql(\"Fix navigation bug on mobile\");\r",
+									"  pm.expect(updated.description).to.eql(\"Menu not closing properly on iOS Safari\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Non-mutable fields remain present\", function () {\r",
+									"  pm.expect(updated).to.have.property(\"board_id\");\r",
+									"  pm.expect(updated).to.have.property(\"column_id\");\r",
+									"  pm.expect(updated).to.have.property(\"position\");\r",
+									"  pm.expect(updated).to.have.property(\"color\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"updated_at is more recent than created_at\", function () {\r",
+									"  const created = new Date(updated.created_at);\r",
+									"  const updatedAt = new Date(updated.updated_at);\r",
+									"  pm.expect(updatedAt.getTime()).to.be.greaterThan(created.getTime());\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"Fix navigation bug on mobile\",\r\n  \"description\": \"Menu not closing properly on iOS Safari\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - No Fields",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 when no fields provided\", function () {\r",
+									"  pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Error message is 'No fields to update'\", function () {\r",
+									"  const json = pm.response.json();\r",
+									"  pm.expect(json).to.have.property(\"message\", \"title or description is required\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Task - Invalid Column",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Invalid column returns 400 or 404\", function () {\r",
+									"    pm.expect([400, 404]).to.include(pm.response.code);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"target_column_id\": \"\",\r\n  \"new_position\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}/move",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}",
+								"move"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Task - No Task",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Non-existing task returns 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"target_column_id\": \"{{in_progress_column_id}}\",\r\n  \"new_position\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/move",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+								"move"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Task - In Progress",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (task moved to IN_PROGRESS)\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const task = pm.response.json();\r",
+									"\r",
+									"// Normalize columnId / column_id\r",
+									"const colId = task.columnId || task.column_id;\r",
+									"\r",
+									"pm.test(\"Task is now in IN_PROGRESS column\", function () {\r",
+									"    const expected = pm.environment.get(\"in_progress_column_id\");\r",
+									"    pm.expect(colId).to.eql(expected);\r",
+									"});\r",
+									"\r",
+									"// Optional: if your API also returns column.slug or status\r",
+									"if (task.slug || task.status) {\r",
+									"    pm.test(\"Task status/slug reflects In Progress\", function () {\r",
+									"        const s = (task.slug || task.status || \"\").toUpperCase();\r",
+									"        pm.expect(s).to.include(\"IN_PROGRESS\");\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"target_column_id\": \"{{in_progress_column_id}}\",\r\n  \"new_position\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}/move",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}",
+								"move"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Task Copy - Done",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (task moved to DONE)\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const task = pm.response.json();\r",
+									"const colId = task.columnId || task.column_id;\r",
+									"\r",
+									"pm.test(\"Task is now in DONE column\", function () {\r",
+									"    const expected = pm.environment.get(\"done_column_id\");\r",
+									"    pm.expect(colId).to.eql(expected);\r",
+									"});\r",
+									"\r",
+									"if (task.slug || task.status) {\r",
+									"    pm.test(\"Task status/slug reflects DONE\", function () {\r",
+									"        const s = (task.slug || task.status || \"\").toUpperCase();\r",
+									"        pm.expect(s).to.include(\"DONE\");\r",
+									"    });\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// This test depends on task_id being set from a previous test",
+									"// The task should already exist and be in a moveable state"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"target_column_id\": \"{{done_column_id}}\",\r\n  \"new_position\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}/move",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}",
+								"move"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"const json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Returns success message\", function () {\r",
+									"  pm.expect(json).to.have.property(\"message\");\r",
+									"  pm.expect(json.message.toLowerCase()).to.include(\"deleted\");\r",
+									"});\r",
+									"\r",
+									"// Optional: clear the taskId since it's now deleted\r",
+									"pm.environment.unset(\"taskId\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{task_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{task_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404 when task does not exist\", function () {\r",
+									"  pm.response.to.have.status(404);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Error message is 'Task not found'\", function () {\r",
+									"  const json = pm.response.json();\r",
+									"  pm.expect(json).to.have.property(\"message\", \"Task not found\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Done Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();\r",
+									"\r",
+									"pm.test(\"removedCount is a number\", () => {\r",
+									"  pm.expect(json.removedCount).to.be.a(\"number\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"removedCount is greater than 1\", () => {\r",
+									"  pm.expect(json.removedCount).to.be.greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const baseUrl = pm.environment.get(\"base_url\");",
+									"const token = pm.environment.get(\"token\");",
+									"",
+									"console.log(\"=== Pre-request Script Started ===\");",
+									"console.log(\"Base URL:\", baseUrl);",
+									"console.log(\"Token exists:\", !!token);",
+									"",
+									"if (!baseUrl || !token) {",
+									"  console.error(\"Missing required environment variables!\");",
+									"  throw new Error(\"baseUrl or authToken is not set. Make sure you logged in first.\");",
+									"}",
+									"",
+									"// 1) Get board to find DONE column id",
+									"console.log(\"Step 1: Fetching board from:\", `${baseUrl}/me/board`);",
+									"",
+									"pm.sendRequest(",
+									"  {",
+									"    url: `${baseUrl}/me/board`,",
+									"    method: \"GET\",",
+									"    header: {",
+									"      Authorization: `Bearer ${token}`,",
+									"    },",
+									"  },",
+									"  function (err, res) {",
+									"    if (err) {",
+									"      console.error(\"=== Error fetching board ===\");",
+									"      console.error(\"Error:\", err);",
+									"      throw err;",
+									"    }",
+									"",
+									"    console.log(\"Board response status:\", res.code);",
+									"",
+									"    if (res.code !== 200) {",
+									"      console.error(\"=== Unexpected status from /me/board ===\");",
+									"      console.error(\"Status code:\", res.code);",
+									"      console.error(\"Response body:\", res.text());",
+									"      throw new Error(\"Cannot get board before remove-done-tasks test\");",
+									"    }",
+									"",
+									"    const body = res.json();",
+									"    console.log(\"Board response body:\", JSON.stringify(body, null, 2));",
+									"    ",
+									"    // Access columns from the nested board structure",
+									"    const columns = body.board?.columns || [];",
+									"    console.log(\"Number of columns found:\", columns.length);",
+									"",
+									"    // Try multiple possible column identifiers for \"done\" status",
+									"    const possibleDoneSlugs = [\"done\", \"DONE\", \"Done\", \"completed\", \"COMPLETED\"];",
+									"    ",
+									"    let doneColumn = columns.find((col) =>",
+									"      possibleDoneSlugs.some(slug => ",
+									"        col.slug === slug || ",
+									"        col.name?.toLowerCase() === slug.toLowerCase() ||",
+									"        col.status?.toLowerCase() === slug.toLowerCase()",
+									"      )",
+									"    );",
+									"",
+									"    if (!doneColumn) {",
+									"      console.error(\"=== No DONE column found ===\");",
+									"      console.error(\"Available columns:\", columns.map(c => ({id: c.id, slug: c.slug, name: c.name})));",
+									"      throw new Error(\"No DONE column found in board\");",
+									"    }",
+									"",
+									"    const doneColumnId = doneColumn.id;",
+									"    console.log(\"Found DONE column ID:\", doneColumnId);",
+									"    pm.environment.set(\"done_column_id\", doneColumnId);",
+									"",
+									"    // 2) Create a task",
+									"    console.log(\"Step 2: Creating a new task...\");",
+									"    ",
+									"    pm.sendRequest(",
+									"      {",
+									"        url: `${baseUrl}/tasks`,",
+									"        method: \"POST\",",
+									"        header: {",
+									"          Authorization: `Bearer ${token}`,",
+									"          \"Content-Type\": \"application/json\"",
+									"        },",
+									"        body: {",
+									"          mode: \"raw\",",
+									"          raw: JSON.stringify({",
+									"            title: \"Test task for removal\",",
+									"            description: \"This task will be moved to DONE and then removed\"",
+									"          })",
+									"        }",
+									"      },",
+									"      function (err, res) {",
+									"        if (err) {",
+									"          console.error(\"=== Error creating task ===\");",
+									"          console.error(\"Error:\", err);",
+									"          throw err;",
+									"        }",
+									"",
+									"        console.log(\"Create task response status:\", res.code);",
+									"",
+									"        if (res.code !== 200 && res.code !== 201) {",
+									"          console.error(\"=== Unexpected status from task creation ===\");",
+									"          console.error(\"Status code:\", res.code);",
+									"          console.error(\"Response body:\", res.text());",
+									"          throw new Error(\"Failed to create task\");",
+									"        }",
+									"",
+									"        const createdTask = res.json();",
+									"        const taskId = createdTask.id;",
+									"        console.log(\"Task created with ID:\", taskId);",
+									"        pm.environment.set(\"task_id\", taskId);",
+									"",
+									"        // 3) Move the task to DONE column",
+									"        console.log(\"Step 3: Moving task to DONE column...\");",
+									"        ",
+									"        pm.sendRequest(",
+									"          {",
+									"            url: `${baseUrl}/tasks/${taskId}/move`,",
+									"            method: \"PATCH\",",
+									"            header: {",
+									"              Authorization: `Bearer ${token}`,",
+									"              \"Content-Type\": \"application/json\"",
+									"            },",
+									"            body: {",
+									"              mode: \"raw\",",
+									"              raw: JSON.stringify({",
+									"                target_column_id: doneColumnId,",
+									"                new_position: 3",
+									"              })",
+									"            }",
+									"          },",
+									"          function (err, res) {",
+									"            if (err) {",
+									"              console.error(\"=== Error moving task ===\");",
+									"              console.error(\"Error:\", err);",
+									"              throw err;",
+									"            }",
+									"",
+									"            console.log(\"Move task response status:\", res.code);",
+									"",
+									"            if (res.code !== 200) {",
+									"              console.error(\"=== Unexpected status from task move ===\");",
+									"              console.error(\"Status code:\", res.code);",
+									"              console.error(\"Response body:\", res.text());",
+									"              throw new Error(\"Failed to move task to DONE column\");",
+									"            }",
+									"",
+									"            console.log(\"Task moved to DONE column successfully!\");",
+									"            console.log(\"Move response:\", res.json());",
+									"            console.log(\"=== Pre-request Script Completed Successfully ===\");",
+									"          }",
+									"        );",
+									"      }",
+									"    );",
+									"  }",
+									");",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/me/board/remove-done-tasks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me",
+								"board",
+								"remove-done-tasks"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
