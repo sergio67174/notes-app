@@ -9,4 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/tests/setupTests.js',
   },
+  define: {
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('http://localhost:4000'),
+  },
 })
