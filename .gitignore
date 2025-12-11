@@ -5,3 +5,14 @@ coverage
 .vscode
 test-results
 playwright-report
+
+# CI/CD artifacts
+k6-results.json
+postman-results.json
+*.log
+
+# Vercel
+.vercel
+
+# GitHub Pages
+gh-pages/
