@@ -190,6 +190,11 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Run database migrations
+        working-directory: backend
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
+
       - name: Start backend server
         working-directory: backend
         env:
@@ -391,6 +396,11 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
+
+      - name: Run database migrations
+        working-directory: backend
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d notes_db_test -f migrations/001_create_tables.sql
 
       - name: Start backend server
         working-directory: backend

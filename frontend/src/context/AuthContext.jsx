@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
   });
 
   const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   /**
@@ -57,7 +56,6 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     token,
-    loading,
     isAuthenticated: !!token,
     login,
     logout,
@@ -71,6 +69,7 @@ export function AuthProvider({ children }) {
  * @returns {Object} Auth context value
  * @throws {Error} If used outside AuthProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
