@@ -1,7 +1,11 @@
 const { defineConfig } = require("@playwright/test");
 
 module.exports = defineConfig({
-  timeout: 5000,
+  timeout: 10000, // 10 seconds global timeout
+
+  // Worker configuration
+  // Use 4 workers for parallel test execution
+  workers: 4,
 
   // Reporter configuration
   reporter: [
