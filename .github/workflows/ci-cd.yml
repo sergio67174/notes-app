@@ -562,14 +562,30 @@ jobs:
           done
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: 'http://localhost:4000/health'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
-          allow_issue_writing: false
-          fail_action: false
-          artifact_name: 'zap-scan-results'
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/.zap:/zap/wrk/:rw \
+            zaproxy/zap-stable \
+            zap-baseline.py \
+            -t http://localhost:4000/health \
+            -c .zap/rules.tsv \
+            -r zap-report.html \
+            -J zap-report.json \
+            || exit_code=$?
+
+          # Exit code 0 = no issues, 1 = warnings found, 2 = errors found
+          # We allow warnings (exit code 1) but fail on errors (exit code 2)
+          if [ "${exit_code:-0}" -eq 2 ]; then
+            echo "❌ OWASP ZAP found critical security issues!"
+            exit 1
+          elif [ "${exit_code:-0}" -eq 1 ]; then
+            echo "⚠️ OWASP ZAP found warnings (acceptable)"
+            exit 0
+          else
+            echo "✅ OWASP ZAP scan passed with no issues"
+            exit 0
+          fi
 
       - name: Security Scan Summary
         if: always()
@@ -589,12 +605,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap-security-report
+          name: security-test-report
           path: |
-            report_html.html
-            report_md.md
-            report_json.json
+            .zap/zap-report.html
+            .zap/zap-report.json
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Stop backend server
         if: always()
