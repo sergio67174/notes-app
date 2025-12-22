@@ -1,0 +1,26 @@
+# Backend Test Dockerfile
+# Purpose: Create a containerized backend environment for testing
+# This matches the CI/CD environment for consistency
+
+FROM node:20-alpine
+
+# Install curl for healthchecks
+RUN apk add --no-cache curl postgresql-client
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 4000
+
+# Run migrations and start server
+CMD ["npm", "start"]

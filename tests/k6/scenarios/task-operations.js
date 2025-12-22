@@ -30,8 +30,12 @@ export function taskLifecycleScenario(token) {
     return;
   }
 
-  const task = createRes.json('task');
-  const taskId = task.id;
+  const task = createRes.json();  // Backend returns task directly, not wrapped
+  const taskId = task ? task.id : null;
+
+  if (!taskId) {
+    return;
+  }
 
   randomSleep(sleep, 1, 2);
 
@@ -102,26 +106,34 @@ export function mixedOperationsScenario(token) {
 
   // Edit first task
   if (task1.status === 200 || task1.status === 201) {
-    const taskId1 = task1.json('task.id');
-    updateTask(http, token, taskId1, {
-      title: `Edited Task A ${Date.now()}`,
-    });
-    randomSleep(sleep, 1, 2);
+    const task1Data = task1.json();  // Backend returns task directly
+    const taskId1 = task1Data ? task1Data.id : null;
 
-    // Move first task
-    moveTask(http, token, taskId1, 'IN_PROGRESS');
-    randomSleep(sleep, 1, 2);
+    if (taskId1) {
+      updateTask(http, token, taskId1, {
+        title: `Edited Task A ${Date.now()}`,
+      });
+      randomSleep(sleep, 1, 2);
+
+      // Move first task
+      moveTask(http, token, taskId1, 'IN_PROGRESS');
+      randomSleep(sleep, 1, 2);
+    }
   }
 
   // Move second task
   if (task2.status === 200 || task2.status === 201) {
-    const taskId2 = task2.json('task.id');
-    moveTask(http, token, taskId2, 'DONE');
-    randomSleep(sleep, 1, 2);
+    const task2Data = task2.json();  // Backend returns task directly
+    const taskId2 = task2Data ? task2Data.id : null;
 
-    // Delete second task
-    deleteTask(http, token, taskId2);
-    randomSleep(sleep, 1, 2);
+    if (taskId2) {
+      moveTask(http, token, taskId2, 'DONE');
+      randomSleep(sleep, 1, 2);
+
+      // Delete second task
+      deleteTask(http, token, taskId2);
+      randomSleep(sleep, 1, 2);
+    }
   }
 
   // Final board refresh
@@ -148,7 +160,12 @@ export function dragDropScenario(token) {
     return;
   }
 
-  const taskId = createRes.json('task.id');
+  const task = createRes.json();  // Backend returns task directly
+  const taskId = task ? task.id : null;
+
+  if (!taskId) {
+    return;
+  }
 
   randomSleep(sleep, 1, 2);
 

@@ -1,0 +1,12 @@
+# ZAP Scan Rules Configuration
+# Format: scanID	threshold	action
+#
+# Thresholds: FAIL, WARN, IGNORE
+# This file configures which security issues should fail the build vs just warn
+#
+# We allow warnings for issues that only affect 404 pages (acceptable for API-only backend)
+# but fail on critical security vulnerabilities
+
+10049	WARN	# Non-Storable Content (acceptable - API responses shouldn't be cached)
+10055	WARN	# CSP: Failure to Define Directive (acceptable on 404 pages only)
+10098	IGNORE	# Cross-Domain Misconfiguration (false positive for CORS-enabled APIs)

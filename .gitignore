@@ -12,6 +12,16 @@ k6-smoke-results.json
 postman-results.json
 *.log
 
+# OWASP ZAP reports
+report_html.html
+report_md.md
+report_json.json
+zap-report*.html
+zap-report*.json
+
+# Docker test results
+test-results/
+
 # Vercel
 .vercel
 
