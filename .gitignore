@@ -19,6 +19,9 @@ report_json.json
 zap-report*.html
 zap-report*.json
 
+# Docker test results
+test-results/
+
 # Vercel
 .vercel
 

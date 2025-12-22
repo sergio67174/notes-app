@@ -1,0 +1,208 @@
+# ============================================================================
+# DOCKER COMPOSE TEST INFRASTRUCTURE
+# ============================================================================
+#
+# Purpose: Run all tests in isolated Docker containers matching CI/CD environment
+#
+# Usage:
+#   # Start infrastructure (database, backend, frontend)
+#   docker-compose -f docker-compose.test.yml up -d
+#
+#   # Run specific test suite
+#   docker-compose -f docker-compose.test.yml run api-tests
+#   docker-compose -f docker-compose.test.yml run e2e-tests
+#   docker-compose -f docker-compose.test.yml run performance-tests
+#   docker-compose -f docker-compose.test.yml run security-tests
+#
+#   # Run ALL tests
+#   docker-compose -f docker-compose.test.yml up --profile tests
+#
+#   # Stop all services
+#   docker-compose -f docker-compose.test.yml down
+#
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # TEST DATABASE
+  # ==========================================================================
+  test-db:
+    image: postgres:14
+    container_name: notes-test-db
+    environment:
+      POSTGRES_DB: notes_db_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # ==========================================================================
+  # BACKEND (FOR TESTING)
+  # ==========================================================================
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: notes-backend-test
+    depends_on:
+      test-db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: test-db
+      DB_PORT: 5432
+      DB_NAME: notes_db_test
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: test_secret_key_for_testing_only
+      NODE_ENV: test
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - test-network
+
+  # ==========================================================================
+  # FRONTEND (FOR TESTING)
+  # ==========================================================================
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    container_name: notes-frontend-test
+    depends_on:
+      backend-test:
+        condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: http://backend-test:4000
+    ports:
+      - "5173:5173"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    networks:
+      - test-network
+
+  # ==========================================================================
+  # API TESTS (NEWMAN/POSTMAN)
+  # ==========================================================================
+  api-tests:
+    image: postman/newman:alpine
+    container_name: notes-api-tests
+    depends_on:
+      backend-test:
+        condition: service_healthy
+    volumes:
+      - ./tests/postman:/etc/newman
+      - ./test-results:/results
+    command: >
+      run /etc/newman/notes-app.postman_collection
+      --environment /etc/newman/docker-test.postman_environment
+      --reporters cli,json
+      --reporter-json-export /results/api-test-results.json
+    networks:
+      - test-network
+    profiles:
+      - tests
+
+  # ==========================================================================
+  # E2E TESTS (PLAYWRIGHT) - RUNS AFTER API TESTS
+  # ==========================================================================
+  e2e-tests:
+    image: mcr.microsoft.com/playwright:v1.57.0-noble
+    container_name: notes-e2e-tests
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      frontend-test:
+        condition: service_healthy
+      api-tests:
+        condition: service_completed_successfully
+    volumes:
+      - .:/workspace
+      - /workspace/node_modules
+    working_dir: /workspace
+    environment:
+      BACKEND_URL: http://backend-test:4000
+      FRONTEND_URL: http://frontend-test:5173
+    command: >
+      sh -c "npm ci && npx playwright test --config=playwright.config.docker.cjs --reporter=html"
+    networks:
+      - test-network
+    profiles:
+      - tests
+
+  # ==========================================================================
+  # PERFORMANCE TESTS (K6) - RUNS AFTER E2E TESTS
+  # ==========================================================================
+  performance-tests:
+    image: grafana/k6:latest
+    container_name: notes-performance-tests
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      e2e-tests:
+        condition: service_completed_successfully
+    volumes:
+      - ./tests/k6:/scripts
+      - ./test-results:/results
+    environment:
+      API_URL: http://backend-test:4000
+    command: run /scripts/scripts/smoke-test.js --out json=/results/k6-results.json
+    networks:
+      - test-network
+    profiles:
+      - tests
+
+  # ==========================================================================
+  # SECURITY TESTS (OWASP ZAP) - RUNS AFTER PERFORMANCE TESTS
+  # ==========================================================================
+  security-tests:
+    image: zaproxy/zap-stable
+    container_name: notes-security-tests
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      performance-tests:
+        condition: service_completed_successfully
+    volumes:
+      - ./test-results:/zap/wrk
+    command: >
+      zap-baseline.py
+      -t http://backend-test:4000/health
+      -r /zap/wrk/zap-report.html
+      -J /zap/wrk/zap-report.json
+    networks:
+      - test-network
+    profiles:
+      - tests
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  test-network:
+    name: notes-test-network
+    driver: bridge
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  test-results:
+    name: notes-test-results

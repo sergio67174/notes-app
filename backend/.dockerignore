@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+npm-debug.log
+
+# Test files
+tests/
+coverage/
+*.test.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Documentation
+README.md
+*.md
+
+# Logs
+*.log
+logs/

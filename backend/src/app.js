@@ -49,7 +49,7 @@ app.use((_req, res, next) => {
 // CORS configuration - restrict to specific origins
 const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [process.env.FRONTEND_URL || 'https://your-frontend.vercel.app']
-  : ['http://localhost:5173', 'http://localhost:4173'];
+  : ['http://localhost:5173', 'http://localhost:4173', 'http://frontend-test:5173'];
 
 app.use(cors({
   origin: (origin, callback) => {
